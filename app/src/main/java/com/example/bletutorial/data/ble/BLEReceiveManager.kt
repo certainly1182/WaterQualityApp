@@ -8,8 +8,8 @@ import android.bluetooth.le.ScanSettings
 import android.content.Context
 import android.util.Log
 import com.example.bletutorial.data.ConnectionState
-import com.example.bletutorial.data.TempHumidityResult
-import com.example.bletutorial.data.TemperatureAndHumidityReceiveManager
+import com.example.bletutorial.data.SensorResult
+import com.example.bletutorial.data.ReceiveManager
 import com.example.bletutorial.util.Resource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -19,16 +19,23 @@ import java.util.*
 import javax.inject.Inject
 
 @SuppressLint("MissingPermission")
-class TemperatureAndHumidityBLEReceiveManager @Inject constructor(
+class BLEReceiveManager @Inject constructor(
     private val bluetoothAdapter: BluetoothAdapter,
     private val context: Context
-) : TemperatureAndHumidityReceiveManager {
+) : ReceiveManager {
 
-    private val DEVICE_NAME = "Jinou_Sensor_HumiTemp"
-    private val TEMP_HUMIDITY_SERVICE_UIID = "0000aa20-0000-1000-8000-00805f9b34fb"
-    private val TEMP_HUMIDITY_CHARACTERISTICS_UUID = "0000aa21-0000-1000-8000-00805f9b34fb"
-
-    override val data: MutableSharedFlow<Resource<TempHumidityResult>> = MutableSharedFlow()
+    private val DEVICE_NAME = "Water Quality Lab"
+    // android wraps UUID's as 0000xxxx-0000-1000-8000-00805f9b34fb
+    private val SERVICE_UUID = "0000aa20-0000-1000-8000-00805f9b34fb"
+    private val TEMPERATURE_CHARACTERISTIC_UUID = "00002a6e-0000-1000-8000-00805f9b34fb"
+    private val PH_CHARACTERISTIC_UUID = "00001102-0000-1000-8000-00805f9b34fb"
+    private val CONDUCTIVITY_CHARACTERISTIC_UUID = "00001103-0000-1000-8000-00805f9b34fb"
+    private val TURBIDITY_CHARACTERISTIC_UUID = "00001102-0000-1004-8000-00805f9b34fb"
+    private var temperature: Float? = null
+    private var pHVoltage: Float? = null
+    private var conductivityVoltage: Float? = null
+    private var turbidityVoltage: Float? = null
+    override val data: MutableSharedFlow<Resource<SensorResult>> = MutableSharedFlow()
 
     private val bleScanner by lazy {
         bluetoothAdapter.bluetoothLeScanner
@@ -71,10 +78,10 @@ class TemperatureAndHumidityBLEReceiveManager @Inject constructor(
                         data.emit(Resource.Loading(message = "Discovering Services..."))
                     }
                     gatt.discoverServices()
-                    this@TemperatureAndHumidityBLEReceiveManager.gatt = gatt
+                    this@BLEReceiveManager.gatt = gatt
                 } else if(newState == BluetoothProfile.STATE_DISCONNECTED){
                     coroutineScope.launch {
-                        data.emit(Resource.Success(data = TempHumidityResult(0f,0f,ConnectionState.Disconnected)))
+                        data.emit(Resource.Success(data = SensorResult(0f,0f, 0f, 0f, ConnectionState.Disconnected)))
                     }
                     gatt.close()
                 }
@@ -104,15 +111,15 @@ class TemperatureAndHumidityBLEReceiveManager @Inject constructor(
                 coroutineScope.launch {
                     data.emit(Resource.Loading(message = "Adjusting MTU space..."))
                 }
-                gatt.requestMtu(517)
+                gatt.requestMtu(23)
             }
         }
 
         override fun onMtuChanged(gatt: BluetoothGatt, mtu: Int, status: Int) {
-            val characteristic = findCharacteristics(TEMP_HUMIDITY_SERVICE_UIID, TEMP_HUMIDITY_CHARACTERISTICS_UUID)
+            val characteristic = findCharacteristics(SERVICE_UUID, TEMPERATURE_CHARACTERISTIC_UUID)
             if(characteristic == null){
                 coroutineScope.launch {
-                    data.emit(Resource.Error(errorMessage = "Could not find temp and humidity publisher"))
+                    data.emit(Resource.Error(errorMessage = "Could not find temp and pH publisher"))
                 }
                 return
             }
@@ -125,31 +132,43 @@ class TemperatureAndHumidityBLEReceiveManager @Inject constructor(
         ) {
             with(characteristic){
                 when(uuid){
-                    UUID.fromString(TEMP_HUMIDITY_CHARACTERISTICS_UUID) -> {
-                        //XX XX XX XX XX XX
-                        val multiplicator = if(value.first().toInt()> 0) -1 else 1
-                        val temperature = value[1].toInt() + value[2].toInt() / 10f
-                        val humidity = value[4].toInt() + value[5].toInt() / 10f
-                        val tempHumidityResult = TempHumidityResult(
-                            multiplicator * temperature,
-                            humidity,
-                            ConnectionState.Connected
-                        )
-                        coroutineScope.launch {
-                            data.emit(
-                                Resource.Success(data = tempHumidityResult)
-                            )
-                        }
+                    UUID.fromString(TEMPERATURE_CHARACTERISTIC_UUID) -> {
+                        temperature = getIntValue(BluetoothGattCharacteristic.FORMAT_SINT16, 0) / 100f
+                    }
+                    UUID.fromString(PH_CHARACTERISTIC_UUID) -> {
+                        pHVoltage = getFloatValue(BluetoothGattCharacteristic.FORMAT_FLOAT, 0)
+                    }
+                    UUID.fromString(CONDUCTIVITY_CHARACTERISTIC_UUID) -> {
+                        conductivityVoltage = getFloatValue(BluetoothGattCharacteristic.FORMAT_FLOAT, 0)
+                    }
+                    UUID.fromString(TURBIDITY_CHARACTERISTIC_UUID) -> {
+                        turbidityVoltage = getFloatValue(BluetoothGattCharacteristic.FORMAT_FLOAT, 0)
                     }
                     else -> Unit
                 }
             }
+            updateSensorResult()
         }
-
-
     }
 
+    private fun toFloat(hexBytearray: ByteArray): Float {
+        val hexString = hexBytearray.joinToString("") { "%02X".format(it) }
+        val intBits = hexString.toInt(16)
+        return Float.fromBits(intBits)
+    }
 
+    private fun updateSensorResult() {
+        val sensorResult = SensorResult(
+            temperature ?: 0f,
+            pHVoltage ?: 0f,
+            conductivityVoltage ?: 0f,
+            turbidityVoltage ?: 0f,
+            ConnectionState.Connected
+        )
+        coroutineScope.launch {
+            data.emit(Resource.Success(data = sensorResult))
+        }
+    }
 
     private fun enableNotification(characteristic: BluetoothGattCharacteristic){
         val cccdUuid = UUID.fromString(CCCD_DESCRIPTOR_UUID)
@@ -185,7 +204,7 @@ class TemperatureAndHumidityBLEReceiveManager @Inject constructor(
 
     override fun startReceiving() {
         coroutineScope.launch {
-            data.emit(Resource.Loading(message = "Scanning Ble devices..."))
+            data.emit(Resource.Loading(message = "Scanning BLE devices..."))
         }
         isScanning = true
         bleScanner.startScan(null,scanSettings,scanCallback)
@@ -203,7 +222,7 @@ class TemperatureAndHumidityBLEReceiveManager @Inject constructor(
 
     override fun closeConnection() {
         bleScanner.stopScan(scanCallback)
-        val characteristic = findCharacteristics(TEMP_HUMIDITY_SERVICE_UIID, TEMP_HUMIDITY_CHARACTERISTICS_UUID)
+        val characteristic = findCharacteristics(SERVICE_UUID, TEMPERATURE_CHARACTERISTIC_UUID)
         if(characteristic != null){
             disconnectCharacteristic(characteristic)
         }
@@ -214,7 +233,7 @@ class TemperatureAndHumidityBLEReceiveManager @Inject constructor(
         val cccdUuid = UUID.fromString(CCCD_DESCRIPTOR_UUID)
         characteristic.getDescriptor(cccdUuid)?.let { cccdDescriptor ->
             if(gatt?.setCharacteristicNotification(characteristic,false) == false){
-                Log.d("TempHumidReceiveManager","set charateristics notification failed")
+                Log.d("SensorReceiveManager","set characteristics notification failed")
                 return
             }
             writeDescription(cccdDescriptor, BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE)

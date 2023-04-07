@@ -35,20 +35,20 @@ class MainActivity : ComponentActivity() {
         showBluetoothDialog()
     }
 
-    private var isBluetootDialogAlreadyShown = false
+    private var isBluetoothDialogAlreadyShown = false
     private fun showBluetoothDialog(){
         if(!bluetoothAdapter.isEnabled){
-            if(!isBluetootDialogAlreadyShown){
+            if(!isBluetoothDialogAlreadyShown){
                 val enableBluetoothIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
                 startBluetoothIntentForResult.launch(enableBluetoothIntent)
-                isBluetootDialogAlreadyShown = true
+                isBluetoothDialogAlreadyShown = true
             }
         }
     }
 
     private val startBluetoothIntentForResult =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()){ result ->
-            isBluetootDialogAlreadyShown = false
+            isBluetoothDialogAlreadyShown = false
             if(result.resultCode != Activity.RESULT_OK){
                 showBluetoothDialog()
             }

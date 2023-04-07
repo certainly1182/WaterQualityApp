@@ -29,9 +29,9 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun TemperatureHumidityScreen(
+fun SensorScreen(
     onBluetoothStateChanged:()->Unit,
-    viewModel: TempHumidityViewModel = hiltViewModel()
+    viewModel: SensorViewModel = hiltViewModel()
 ) {
 
     SystemBroadcastReceiver(systemAction = BluetoothAdapter.ACTION_STATE_CHANGED){ bluetoothState ->
@@ -144,11 +144,19 @@ fun TemperatureHumidityScreen(
                     verticalArrangement = Arrangement.Center
                 ){
                     Text(
-                        text = "Humidity: ${viewModel.humidity}",
+                        text = "Temperature: ${viewModel.temperature}",
                         style = MaterialTheme.typography.h6
                     )
                     Text(
-                        text = "Temperature: ${viewModel.temperature}",
+                        text = "pH: ${viewModel.pH}",
+                        style = MaterialTheme.typography.h6
+                    )
+                    Text(
+                        text = "Conductivity: ${viewModel.conductivity}",
+                        style = MaterialTheme.typography.h6
+                    )
+                    Text(
+                        text = "Turbidity: ${viewModel.turbidity}",
                         style = MaterialTheme.typography.h6
                     )
                 }
@@ -163,14 +171,3 @@ fun TemperatureHumidityScreen(
     }
 
 }
-
-
-
-
-
-
-
-
-
-
-

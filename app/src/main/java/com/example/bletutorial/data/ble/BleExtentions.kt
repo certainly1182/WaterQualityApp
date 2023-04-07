@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothGattDescriptor
 import android.util.Log
 import java.util.*
 
+// Client Characteristic Configuration from assigned numbers
 const val CCCD_DESCRIPTOR_UUID = "00002902-0000-1000-8000-00805F9B34FB"
 
 fun BluetoothGatt.printGattTable() {
@@ -36,7 +37,7 @@ fun BluetoothGattCharacteristic.printProperties(): String = mutableListOf<String
     if (isReadable()) add("READABLE")
     if (isWritable()) add("WRITABLE")
     if (isWritableWithoutResponse()) add("WRITABLE WITHOUT RESPONSE")
-    if (isIndicatable()) add("INDICATABLE")
+    if (isIndicatable()) add("INDICTABLE")
     if (isNotifiable()) add("NOTIFIABLE")
     if (isEmpty()) add("EMPTY")
 }.joinToString()

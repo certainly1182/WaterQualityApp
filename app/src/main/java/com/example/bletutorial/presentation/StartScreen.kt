@@ -32,7 +32,7 @@ fun StartScreen(
                 .clip(CircleShape)
                 .background(Color.Blue, CircleShape)
                 .clickable {
-                    navController.navigate(Screen.TemperatureHumidityScreen.route){
+                    navController.navigate(Screen.SensorScreen.route){
                         popUpTo(Screen.StartScreen.route){
                             inclusive = true
                         }
