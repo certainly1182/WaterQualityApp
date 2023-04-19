@@ -151,12 +151,6 @@ class BLEReceiveManager @Inject constructor(
         }
     }
 
-    private fun toFloat(hexBytearray: ByteArray): Float {
-        val hexString = hexBytearray.joinToString("") { "%02X".format(it) }
-        val intBits = hexString.toInt(16)
-        return Float.fromBits(intBits)
-    }
-
     private fun updateSensorResult() {
         val sensorResult = SensorResult(
             temperature ?: 0f,

@@ -5,6 +5,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.Button
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.MaterialTheme
@@ -16,11 +17,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.bletutorial.data.ConnectionState
 import com.example.bletutorial.presentation.permissions.PermissionUtils
 import com.example.bletutorial.presentation.permissions.SystemBroadcastReceiver
@@ -31,7 +35,9 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 @Composable
 fun SensorScreen(
     onBluetoothStateChanged:()->Unit,
-    viewModel: SensorViewModel = hiltViewModel()
+    viewModel: SensorViewModel,
+    navController: NavController,
+    calibrationViewModel: CalibrationViewModel
 ) {
 
     SystemBroadcastReceiver(systemAction = BluetoothAdapter.ACTION_STATE_CHANGED){ bluetoothState ->
@@ -143,20 +149,26 @@ fun SensorScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ){
-                    Text(
-                        text = "Temperature: ${viewModel.temperature}",
+                    ClickableText(
+                        text = AnnotatedString("Temperature: " +
+                                "%.1f".format(viewModel.temperature + calibrationViewModel.temperatureOffset)
+                        ),
+                        onClick = { navController.navigate("temperature_screen") },
                         style = MaterialTheme.typography.h6
                     )
-                    Text(
-                        text = "pH: ${viewModel.pH}",
+                    ClickableText(
+                        text = AnnotatedString("pH: ${viewModel.pH}"),
+                        onClick = { /*goto calibrate*/ },
                         style = MaterialTheme.typography.h6
                     )
-                    Text(
-                        text = "Conductivity: ${viewModel.conductivity}",
+                    ClickableText(
+                        text = AnnotatedString("Conductivity: ${viewModel.conductivity}"),
+                        onClick = { /*goto calibrate */ },
                         style = MaterialTheme.typography.h6
                     )
-                    Text(
-                        text = "Turbidity: ${viewModel.turbidity}",
+                    ClickableText(
+                        text = AnnotatedString("Turbidity: ${viewModel.turbidity}"),
+                        onClick = { /*goto calibrate */ },
                         style = MaterialTheme.typography.h6
                     )
                 }
@@ -170,4 +182,15 @@ fun SensorScreen(
         }
     }
 
+}
+
+@Preview
+@Composable
+fun SensorScreenPreview() {
+    SensorScreen(
+        onBluetoothStateChanged = {},
+        navController = rememberNavController(),
+        viewModel = SensorViewModel(ReceiveManagerMock()),
+        calibrationViewModel = CalibrationViewModel()
+    )
 }

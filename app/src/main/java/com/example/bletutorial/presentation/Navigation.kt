@@ -1,6 +1,7 @@
 package com.example.bletutorial.presentation
 
 import androidx.compose.runtime.Composable
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -9,6 +10,8 @@ import androidx.navigation.compose.rememberNavController
 fun Navigation(
     onBluetoothStateChanged:()->Unit
 ) {
+    val viewModel: SensorViewModel = hiltViewModel()
+    val calibrationViewModel: CalibrationViewModel = hiltViewModel()
 
     val navController = rememberNavController()
 
@@ -19,7 +22,21 @@ fun Navigation(
 
         composable(Screen.SensorScreen.route){
             SensorScreen(
-                onBluetoothStateChanged
+                viewModel = viewModel,
+                calibrationViewModel = calibrationViewModel,
+                onBluetoothStateChanged = onBluetoothStateChanged,
+                navController = navController
+            )
+        }
+
+        composable(Screen.TemperatureScreen.route){
+            TemperatureScreen(
+                temperature = viewModel.temperature,
+                calibrationViewModel = calibrationViewModel,
+                navController = navController,
+                onCalibrationSaved = { temperatureOffset ->
+                    calibrationViewModel.temperatureOffset = temperatureOffset
+                }
             )
         }
     }
@@ -29,4 +46,5 @@ fun Navigation(
 sealed class Screen(val route:String){
     object StartScreen:Screen("start_screen")
     object SensorScreen:Screen("sensor_screen")
+    object TemperatureScreen:Screen("temperature_screen")
 }

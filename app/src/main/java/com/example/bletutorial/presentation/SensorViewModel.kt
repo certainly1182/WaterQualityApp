@@ -82,5 +82,4 @@ class SensorViewModel @Inject constructor(
         receiveManager.closeConnection()
     }
 
-
 }
