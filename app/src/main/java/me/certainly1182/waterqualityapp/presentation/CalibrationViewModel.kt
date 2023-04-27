@@ -68,4 +68,8 @@ class CalibrationViewModel @Inject constructor(
     fun getTemperatureOffset(): Flow<Float> {
         return dataStoreManager.getTemperatureOffset()
     }
+
+    fun getConductivity(conductivityVoltage: Float): Float {
+        return 3.6f
+    }
 }

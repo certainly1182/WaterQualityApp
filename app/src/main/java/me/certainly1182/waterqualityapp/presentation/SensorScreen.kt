@@ -2,7 +2,9 @@ package me.certainly1182.waterqualityapp.presentation
 
 import android.bluetooth.BluetoothAdapter
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
@@ -15,7 +17,9 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.modifier.modifierLocalConsumer
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
@@ -32,6 +36,9 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import me.certainly1182.waterqualityapp.ui.theme.Purple200
+import me.certainly1182.waterqualityapp.ui.theme.Purple500
+import me.certainly1182.waterqualityapp.ui.theme.Purple700
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -155,64 +162,173 @@ fun SensorScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ){
-                    ClickableText(
-                        text = AnnotatedString(
-                        "Temperature: " +
-                            "%.1f".format(viewModel.temperature +
-                            savedTempOffset) +
-                            "°C"
-                        ),
-                        onClick = { navController.navigate("temperature_screen") },
-                        style = MaterialTheme.typography.h4,
-                        modifier = Modifier
+                    Row(
+                        modifier = Modifier.fillMaxWidth()
+                            .padding(vertical = 10.dp)
                             .border(
                                 BorderStroke(
-                                    5.dp, Color.Cyan
-                                ),
-                                RoundedCornerShape(10.dp)
+                                    3.dp, Purple500
+                                )
                             )
-                            .padding(8.dp)
-                    )
-                    ClickableText(
-                        text = AnnotatedString("pH: ${calibrationViewModel
-                            .getPH(pHVoltage = viewModel.pHVoltage)}"),
-                        onClick = { navController.navigate("ph_screen") },
-                        style = MaterialTheme.typography.h4,
-                        modifier = Modifier
+                            .background(Purple200)
+                            .clickable { navController.navigate("temperature_screen") },
+                        verticalAlignment = Alignment.Bottom,
+                    ) {
+                        Text(
+                            text = "Temperature",
+                            style = MaterialTheme.typography.h5,
+                            color = Color.White,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(start = 8.dp, top = 14.dp, bottom = 10.dp)
+                                .wrapContentWidth(Alignment.Start)
+                        )
+                        Text(
+                            text = AnnotatedString(
+                                "%.1f".format(viewModel.temperature +
+                                        savedTempOffset)
+                            ),
+                            style = MaterialTheme.typography.h4,
+                            color = Color.White,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(8.dp)
+                                .wrapContentWidth(Alignment.End)
+                        )
+                        Text(
+                            text = "°C",
+                            style = MaterialTheme.typography.h5,
+                            color = Color.White,
+                            modifier = Modifier
+                                .weight(0.6f)
+                                .padding(start = 8.dp, top = 14.dp, bottom = 10.dp)
+                                .wrapContentWidth(Alignment.Start)
+                        )
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth()
+                            .padding(vertical = 10.dp)
                             .border(
                                 BorderStroke(
-                                    5.dp, Color.Cyan
-                                ),
-                                RoundedCornerShape(10.dp)
+                                    3.dp, Purple500
+                                )
                             )
-                            .padding(8.dp)
-                    )
-                    ClickableText(
-                        text = AnnotatedString("Conductivity: ${viewModel.conductivityVoltage}"),
-                        onClick = { navController.navigate("conductivity_screen") },
-                        style = MaterialTheme.typography.h4,
-                        modifier = Modifier
+                            .background(Purple200)
+                            .clickable { navController.navigate("ph_screen") },
+                    ) {
+                        Text(
+                            text = "pH",
+                            style = MaterialTheme.typography.h5,
+                            color = Color.White,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(start = 8.dp, top = 14.dp, bottom = 10.dp)
+                                .wrapContentWidth(Alignment.Start)
+                        )
+                        Text(
+                            text = AnnotatedString(
+                                "%.1f".format(calibrationViewModel
+                                    .getPH(pHVoltage = viewModel.pHVoltage))),
+                            style = MaterialTheme.typography.h4,
+                            color = Color.White,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(8.dp)
+                                .wrapContentWidth(Alignment.End)
+                        )
+                        Text(
+                            text = " ",
+                            color = Color.White,
+                            modifier = Modifier
+                                .weight(0.6f)
+                                .padding(start = 8.dp, top = 14.dp, bottom = 10.dp)
+                                .wrapContentWidth(Alignment.Start)
+                        )
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth()
+                            .padding(vertical = 10.dp)
                             .border(
                                 BorderStroke(
-                                    5.dp, Color.Cyan
-                                ),
-                                RoundedCornerShape(10.dp)
+                                    3.dp, Purple500
+                                )
                             )
-                            .padding(8.dp)
-                    )
-                    ClickableText(
-                        text = AnnotatedString("Turbidity: ${viewModel.turbidityVoltage}"),
-                        onClick = { navController.navigate("turbidity_screen") },
-                        style = MaterialTheme.typography.h4,
-                        modifier = Modifier
+                            .background(Purple200)
+                            .clickable { navController.navigate("conductivity_screen") },
+                    ) {
+                        Text(
+                            text = "Conductivity",
+                            style = MaterialTheme.typography.h5,
+                            color = Color.White,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(start = 8.dp, top = 14.dp, bottom = 10.dp)
+                                .wrapContentWidth(Alignment.Start)
+                        )
+                        Text(
+                            text = AnnotatedString(
+                                "%.2f".format(calibrationViewModel
+                                    .getConductivity(conductivityVoltage = viewModel.conductivityVoltage))
+                            ),
+                            style = MaterialTheme.typography.h4,
+                            color = Color.White,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(8.dp)
+                                .wrapContentWidth(Alignment.End)
+                        )
+                        Text(
+                            text = "µS/cm",
+                            style = MaterialTheme.typography.h5,
+                            color = Color.White,
+                            modifier = Modifier
+                                .weight(0.6f)
+                                .padding(start = 8.dp, top = 14.dp, bottom = 10.dp)
+                                .wrapContentWidth(Alignment.Start)
+                        )
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth()
+                            .padding(vertical = 10.dp)
                             .border(
                                 BorderStroke(
-                                    5.dp, Color.Cyan
-                                ),
-                                RoundedCornerShape(10.dp)
+                                    3.dp, Purple500
+                                )
                             )
-                            .padding(8.dp)
-                    )
+                            .background(Purple200)
+                            .clickable { navController.navigate("turbidity_screen") },
+                    ) {
+                        Text(
+                            text = "Turbidity",
+                            style = MaterialTheme.typography.h5,
+                            color = Color.White,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(start = 8.dp, top = 14.dp, bottom = 10.dp)
+                                .wrapContentWidth(Alignment.Start)
+                        )
+                        Text(
+                            text = AnnotatedString(
+                                "%.2f".format(calibrationViewModel
+                                    .getTurbidity(turbidityVoltage = viewModel.turbidityVoltage))
+                            ),
+                            style = MaterialTheme.typography.h4,
+                            color = Color.White,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(8.dp)
+                                .wrapContentWidth(Alignment.End)
+                        )
+                        Text(
+                            text = "NTU",
+                            style = MaterialTheme.typography.h5,
+                            color = Color.White,
+                            modifier = Modifier
+                                .weight(0.6f)
+                                .padding(start = 8.dp, top = 14.dp, bottom = 10.dp)
+                                .wrapContentWidth(Alignment.Start)
+                        )
+                    }
                 }
             }else if(bleConnectionState == ConnectionState.Disconnected){
                 Button(onClick = {
